@@ -26,9 +26,7 @@ export const LabelPicker: FC<LabelProps> = ({ selectedLabels, onChange }) => {
              { label.name }
           </span>
         ) )
-      }
-        
-        
+      }     
     </>
   )
 }
