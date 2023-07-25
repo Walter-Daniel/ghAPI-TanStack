@@ -2,6 +2,8 @@ import { FiInfo, FiMessageSquare, FiCheckCircle } from 'react-icons/fi';
 import { Issue, State } from '../interfaces/issues';
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { getIssueComments, getIssueInfo } from '../hooks/useIussue';
 
 interface Props {
     issue: Issue
@@ -10,11 +12,36 @@ interface Props {
 export const IssueItem: FC<Props> = ({issue}) => {
 
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    const preFetchData = () => {
+        queryClient.prefetchQuery(
+            ['issue', issue.number],
+            () => getIssueInfo( issue.number )
+        )
+
+        queryClient.prefetchQuery(
+            ['issue', issue.number, 'comments'],
+            () => getIssueComments( issue.number )
+        )
+    }
+
+    //al pasar el mouse por el issue setea la data del mismo en el cache.
+    const preSetData = () => {
+        queryClient.setQueryData(
+            ['issue', issue.number],
+            issue,
+            {
+                updatedAt: new Date().getTime() + 1000*60*60 //suma una hora hasta que se vuelva a setear la data, mientras tanto la data que esta almacenada en caché se mantiene fresca.
+            }
+        )
+    }
 
     return (
-        <div className="card mb-2 issue" onClick={() => navigate(`/issues/issue/${issue.number}`)}>
-            <div className="card-body d-flex align-items-center">
-                
+        <div className="card mb-2 issue" 
+             onClick={() => navigate(`/issues/issue/${issue.number}`)}
+             onMouseEnter={ preSetData }>
+            <div className="card-body d-flex align-items-center">     
                 {
                     issue.state === State.Open
                     ? <FiInfo size={30} color="red" />
